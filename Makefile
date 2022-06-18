@@ -1,5 +1,5 @@
 build:
-	go build -o kudos
+	go build -o kudos ./backend
 
 test:
 	sudo docker rm -f kudos-redis
