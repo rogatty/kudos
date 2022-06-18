@@ -29,9 +29,6 @@ func increaseCounter(url string, repository *SQLiteRepository) string {
 }
 
 func getCounterHandler(w http.ResponseWriter, r *http.Request, repository *SQLiteRepository) {
-	// TODO Use value from config
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	var counter string
 	url := r.URL.Query().Get("url")
 
@@ -45,9 +42,6 @@ func getCounterHandler(w http.ResponseWriter, r *http.Request, repository *SQLit
 }
 
 func increaseCounterHandler(w http.ResponseWriter, r *http.Request, repository *SQLiteRepository) {
-	// TODO Use value from config
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	url := r.URL.Query().Get("url")
 
 	if url == "" {

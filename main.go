@@ -23,6 +23,7 @@ func get_sqlite_conn() *sql.DB {
 
 func main() {
 	listen_port := flag.String("port", ":8080", "Listening port")
+	allow_origin := flag.String("allowed_origin", "*", "Access-Control-Allow-Origin")
 
 	flag.Parse()
 
@@ -35,13 +36,16 @@ func main() {
 
 	handler := func(handler func(w http.ResponseWriter, r *http.Request, repository *SQLiteRepository)) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", *allow_origin)
 			handler(w, r, repository)
 		}
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", handler(getCounterHandler)).Methods("GET")
-	r.HandleFunc("/", handler(increaseCounterHandler)).Methods("POST")
+	r.HandleFunc("/", handler(getCounterHandler)).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc("/", handler(increaseCounterHandler)).Methods(http.MethodPost)
+
+	r.Use(mux.CORSMethodMiddleware(r))
 
 	serveMux := http.NewServeMux()
 	serveMux.Handle("/", r)
