@@ -1,10 +1,14 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
+
+var ErrInvalidUrl = errors.New("invalid url")
 
 func getCounter(url string, repository *SQLiteRepository) string {
 	kudos, err := repository.GetByUrl(url)
@@ -28,28 +32,40 @@ func increaseCounter(url string, repository *SQLiteRepository) string {
 	return strconv.FormatInt(kudos.Counter, 10)
 }
 
-func getCounterHandler(w http.ResponseWriter, r *http.Request, repository *SQLiteRepository) {
-	var counter string
-	url := r.URL.Query().Get("url")
-
-	if url != "" {
-		counter = getCounter(url, repository)
-	} else {
-		counter = "0"
-	}
-
-	w.Write([]byte(counter))
-}
-
-func increaseCounterHandler(w http.ResponseWriter, r *http.Request, repository *SQLiteRepository) {
+func getUrlFromRequest(w http.ResponseWriter, r *http.Request, allowUrlPrefix string) (string, error) {
 	url := r.URL.Query().Get("url")
 
 	if url == "" {
-		http.Error(w, http.StatusText(http.StatusBadRequest), 400)
+		http.Error(w, "Missing url param", 400)
+		return "", ErrInvalidUrl
+	}
+
+	if allowUrlPrefix != "" && !strings.HasPrefix(url, allowUrlPrefix) {
+		http.Error(w, "Invalid url param", 400)
+		return "", ErrInvalidUrl
+	}
+
+	return url, nil
+}
+
+func getCounterHandler(w http.ResponseWriter, r *http.Request, repository *SQLiteRepository, allowUrlPrefix string) {
+	url, err := getUrlFromRequest(w, r, allowUrlPrefix)
+
+	if err != nil {
+		return
+	}
+
+	counter := getCounter(url, repository)
+	w.Write([]byte(counter))
+}
+
+func increaseCounterHandler(w http.ResponseWriter, r *http.Request, repository *SQLiteRepository, allowUrlPrefix string) {
+	url, err := getUrlFromRequest(w, r, allowUrlPrefix)
+
+	if err != nil {
 		return
 	}
 
 	counter := increaseCounter(url, repository)
-
 	w.Write([]byte(counter))
 }

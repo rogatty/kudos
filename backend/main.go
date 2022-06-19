@@ -23,7 +23,8 @@ func get_sqlite_conn() *sql.DB {
 
 func main() {
 	listen_port := flag.String("port", ":8080", "Listening port")
-	allow_origin := flag.String("allowed_origin", "*", "Access-Control-Allow-Origin")
+	allow_origin := flag.String("allow_origin", "*", "Access-Control-Allow-Origin header")
+	allow_url_prefix := flag.String("allow_url_prefix", "", "If not empty, it will be used in URL validation")
 
 	flag.Parse()
 
@@ -34,10 +35,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	handler := func(handler func(w http.ResponseWriter, r *http.Request, repository *SQLiteRepository)) func(w http.ResponseWriter, r *http.Request) {
+	handler := func(handler func(w http.ResponseWriter, r *http.Request, repository *SQLiteRepository, allowUrlPrefix string)) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Access-Control-Allow-Origin", *allow_origin)
-			handler(w, r, repository)
+			handler(w, r, repository, *allow_url_prefix)
 		}
 	}
 
