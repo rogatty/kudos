@@ -14,7 +14,10 @@ func getCounter(url string, repository *SQLiteRepository) string {
 	kudos, err := repository.GetByUrl(url)
 
 	if err != nil {
-		log.Println(err)
+		if err != ErrDoesNotExist {
+			log.Println(err)
+		}
+
 		return "0"
 	}
 
